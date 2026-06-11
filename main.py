@@ -1,4 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+app.mount("/", StaticFiles(directory="public", name="static"))
 from fastapi import FastAPI
 from pydantic import BaseModel
 from openai import OpenAI
