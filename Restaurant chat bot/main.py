@@ -20,8 +20,13 @@ app.add_middleware(
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
 class ChatRequest(BaseModel):
     message: str
+    history: list = []
 
 class ChatResponse(BaseModel):
     response: str
@@ -47,10 +52,8 @@ async def chat(request: ChatRequest):
         if len(message) > 1000:
             return ChatResponse(response="Message too long. Please keep it under 1000 characters.")
         
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": """You are a helpful restaurant assistant having a natural conversation with a customer.
+        messages = [
+            {"role": "system", "content": """You are a helpful restaurant assistant having a natural conversation with a customer.
 
 Your job: Have a flowing conversation. Never reset or redirect. Keep the conversation going naturally.
 
@@ -65,9 +68,17 @@ Accept everything naturally. Keep conversations flowing. Be helpful and friendly
 Restaurant topics: menu, hours, location, reservations, prices, dietary needs - answer helpfully.
 Other topics: respond naturally but redirect to restaurant help if needed.
 
-NEVER show the default greeting again mid-conversation. Continue the conversation smoothly."""},
-                {"role": "user", "content": message}
-            ],
+NEVER show the default greeting again mid-conversation. Continue the conversation smoothly."""}
+        ]
+        
+        if request.history:
+            messages.extend(request.history)
+        
+        messages.append({"role": "user", "content": message})
+        
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
             max_tokens=500,
             temperature=0.8
         )
