@@ -4,6 +4,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 load_dotenv()
 
@@ -25,7 +26,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def serve_html():
     with open("public/index.html", "r") as f:
         return f.read()
