@@ -4,14 +4,11 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
-
-# Load environment variables
 load_dotenv()
 
-# Initialize FastAPI
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,22 +17,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Define request model
 class ChatRequest(BaseModel):
     message: str
 
-# Define response model
 class ChatResponse(BaseModel):
     response: str
 
-# Chatbot endpoint
+@app.get("/")
+async def serve_html():
+    with open("public/index.html", "r") as f:
+        return f.read()
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
-        # Call OpenAI API
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -56,7 +53,6 @@ Keep responses friendly, concise, and professional. Do NOT answer general knowle
             max_tokens=500
         )
         
-        # Extract response text
         bot_response = response.choices[0].message.content
         
         return ChatResponse(response=bot_response)
@@ -64,7 +60,6 @@ Keep responses friendly, concise, and professional. Do NOT answer general knowle
     except Exception as e:
         return ChatResponse(response=f"Error: {str(e)}")
 
-# Health check endpoint
 @app.get("/health")
 async def health():
     return {"status": "ok"}
