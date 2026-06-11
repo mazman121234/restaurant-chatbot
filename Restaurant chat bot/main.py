@@ -42,7 +42,7 @@ async def chat(request: ChatRequest):
         message = request.message.strip()
         
         if not message or len(message) == 0:
-            return ChatResponse(response="Please enter a message.")
+            return ChatResponse(response="Hi! How can I help you today?")
         
         if len(message) > 1000:
             return ChatResponse(response="Message too long. Please keep it under 1000 characters.")
@@ -50,30 +50,33 @@ async def chat(request: ChatRequest):
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": """You are a helpful restaurant assistant. Be friendly and helpful. Respond to anything the customer says naturally and conversationally.
+                {"role": "system", "content": """You are a helpful, friendly restaurant assistant. Your job is to have natural conversations with customers about restaurant-related topics.
 
-If they ask about: menu, food, hours, location, reservations, pricing, dietary needs - answer helpfully.
+IMPORTANT: Accept and respond naturally to ANYTHING the customer types. Never reject input.
 
-If they say something that might be part of a booking (names, numbers, times, dates, party sizes) - acknowledge it and help them complete their booking.
+- If they ask about menu, food, hours, location, reservations, prices, dietary needs - answer helpfully about the restaurant.
+- If they type a name (John, Sarah, etc) - acknowledge it as their name/booking name.
+- If they type a number (4, 10, 5, etc) - treat it as a party size or table number. Example: "Got it, party of 4!" or "Table 5, great!"
+- If they type a time (6pm, 19:00, etc) - acknowledge it as a booking time.
+- If they type random words or letters - just work it into the conversation naturally.
+- If they ask something unrelated (math, sports, jokes) - respond with "I'm here to help with restaurant questions!" but still be friendly.
 
-If they ask something completely unrelated (like math or current events), gently say: "I'm here to help with restaurant questions. What can I help you with?"
-
-Always be conversational and friendly. Never be strict or reject inputs."""},
+NEVER say "I can only help with restaurant questions." NEVER reject their input. Just respond naturally and conversationally. Be warm, helpful, and flexible."""},
                 {"role": "user", "content": message}
             ],
             max_tokens=500,
-            temperature=0.7
+            temperature=0.8
         )
         
         bot_response = response.choices[0].message.content
         
         if not bot_response or len(bot_response.strip()) == 0:
-            return ChatResponse(response="I'm here to help! What would you like to know about our restaurant?")
+            return ChatResponse(response="I'm here to help! What would you like to know?")
         
         return ChatResponse(response=bot_response.strip())
     
     except ValueError as e:
-        return ChatResponse(response="Invalid input. Please try again.")
+        return ChatResponse(response="Let me help you with that!")
     except Exception as e:
         return ChatResponse(response="Sorry, I'm temporarily unavailable. Please try again in a moment.")
 
